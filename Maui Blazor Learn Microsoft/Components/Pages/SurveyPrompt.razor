@@ -1,0 +1,58 @@
+@page "/toast"
+@using CommunityToolkit.Maui.Alerts
+@using CommunityToolkit.Maui.Core
+@inject ISpeechToText SpeechToText
+
+
+	<h1>Toast</h1>
+	<p>Click the button to show a toast.</p>
+	<button class="btn btn-primary" @onclick="ShowToast">Show toast</button>
+
+<button @onclick="StartListening">
+	<i class="fas fa-microphone"></i> Start Transcription
+</button>
+
+<input @bind="recognizedText" />
+
+
+	@code {
+		private async Task ShowToast()
+		{
+		CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+		string text = "Hey it works!";
+		ToastDuration duration = ToastDuration.Short;
+		double fontSize = 14;
+
+		var toast = Toast.Make(text, duration, fontSize);
+
+		await toast.Show(cancellationTokenSource.Token);
+		}
+    private string recognizedText;
+
+    protected override void OnInitialized()
+    {
+        SpeechToText.RecognitionResultUpdated += OnRecognitionResultUpdated;
+    }
+
+    private async Task StartListening()
+    {
+        try
+        {
+            await SpeechToText.RecognizeSpeechAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            recognizedText = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void OnRecognitionResultUpdated(string text)
+    {
+        InvokeAsync(() =>
+        {
+            recognizedText = text;
+            StateHasChanged();
+        });
+    }
+}
